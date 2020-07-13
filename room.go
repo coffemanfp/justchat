@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/coffemanfp/trace"
 	"github.com/gorilla/websocket"
 )
 
@@ -30,6 +31,9 @@ type room struct {
 
 	// clients holds all current clients in this room.
 	clients map[*client]bool
+
+	// tracer will receive trace information of activity in the room.
+	tracer trace.Tracer
 }
 
 func newRoom() *room {
@@ -41,31 +45,36 @@ func newRoom() *room {
 	}
 }
 
-func (r *room) run() {
+func (rm *room) run() {
 	for {
 		select {
-		case client := <-r.join:
+		case client := <-rm.join:
 			// joining
-			r.clients[client] = true
-		case client := <-r.leave:
+			rm.clients[client] = true
+			rm.tracer.Trace("New client joined")
+		case client := <-rm.leave:
 			// leaving
-			delete(r.clients, client)
+			delete(rm.clients, client)
 			close(client.send)
-		case msg := <-r.forward:
-			for client := range r.clients {
+			rm.tracer.Trace("Client left")
+		case msg := <-rm.forward:
+			for client := range rm.clients {
 				select {
 				case client.send <- msg:
 					// send the message
+					rm.tracer.Trace(" -- sent to client")
 				default:
 					// failed to send
-					delete(r.clients, client)
+					delete(rm.clients, client)
 					close(client.send)
+					rm.tracer.Trace(" -- failed to send, cleaned up client")
 				}
 			}
 		}
 	}
 }
 
+// ServeHTTP A ServeHTTP implementation.
 func (rm *room) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	socket, err := upgrader.Upgrade(w, r, nil)

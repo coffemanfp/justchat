@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"path/filepath"
 	"sync"
 	"text/template"
+
+	"github.com/coffemanfp/trace"
 )
 
 func main() {
@@ -16,6 +19,7 @@ func main() {
 	flag.Parse()
 
 	r := newRoom()
+	r.tracer = trace.New(os.Stdout)
 
 	// Root
 	http.Handle("/", &templateHandler{
