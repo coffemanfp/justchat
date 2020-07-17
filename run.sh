@@ -1,4 +1,3 @@
 #!/bin/bash
 
-go build -o ./chat
-./chat
+go build -o ./chat && ./chat
