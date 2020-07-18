@@ -2,23 +2,47 @@
 
 <head>
     <title>Chat</title>
+    <link rel="stylesheet" href="../assets/bootstrap.min.css">
     <style>
-        input {
-            display: block;
+        #message-container{
+            margin-top: 15px;
         }
 
-        ul {
+        ul#messages {
             list-style: none;
+        }
+
+        ul#message li {
+            margin-bottom: 2px;
+        }
+
+        ul#message li img {
+            margin-right: 10px;
+        }
+
+        #chatbox {
+            margin-left: 15px;
+            margin-right: 15px;
         }
     </style>
 </head>
 
 <body>
-    <ul id="messages"></ul>
-    <form id="chatbox">
-        {{.UserData.name}}:<br/>
-        <textarea></textarea>
-        <input type="submit" value="Send" />
+    
+    <div id="message-container" class="container">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <ul id="messages"></ul>
+            </div>
+        </div>
+    </div>
+
+    <form role="form" id="chatbox">
+        <div class="form-group">
+            <label for="message">Send a message as {{.UserData.name}}</label> or <a href="/logout">Sign out</a>
+            <textarea id="message" class="form-control"></textarea>
+        </div>
+        <input type="submit" value="Send" class="btn btn-default">
     </form>
 
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js">
@@ -34,7 +58,7 @@
                     alert("Error: There is no socket connection.");
                     return false;
                 }
-                socket.send(msgBox.val());
+                socket.send(JSON.stringify({"Message": msgBox.val()}));
                 msgBox.val("");
                 return false;
             });
@@ -46,7 +70,34 @@
                     alert("Connection has been closed.");
                 }
                 socket.onmessage = function (e) {
-                    messages.append($("<li>").text(e.data));
+                    var msg = JSON.parse(e.data);
+
+                    messages.append(
+                        $("<li>").append(
+                            $("<img>").css({
+                                width: 50,
+                                backgroundSize: "cover",
+                                verticalAlign: "middle",
+                                borderRadius: "50%",
+                                marginRight: 25
+                            }).attr({
+                                src: msg.AvatarURL,
+                                title: msg.Name
+                            }),
+                            $("<span>").text(msg.Message),
+                            $("<span>").text(msg.When).css({
+                                color: "gray",
+                                fontSize: ".6em",
+                                marginLeft: "auto"
+                            }).attr("src", msg.AvatarURL)
+                        ).css({
+                            display: "flex",
+                            flexDirection: "row",
+                            alignItems: "center",
+                            marginTop: 20,
+                            marginBottom: 20
+                        })
+                    );
                 }
             }
         });

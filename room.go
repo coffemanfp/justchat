@@ -6,6 +6,7 @@ import (
 
 	"github.com/coffemanfp/trace"
 	"github.com/gorilla/websocket"
+	"github.com/stretchr/objx"
 )
 
 const (
@@ -21,7 +22,7 @@ var upgrader = &websocket.Upgrader{
 type room struct {
 	// forward is a channel that holds incoming messages
 	// that should be forwarded to the other clients
-	forward chan []byte
+	forward chan *message
 
 	// join is a channel for clients wishing to join the room.
 	join chan *client
@@ -34,15 +35,19 @@ type room struct {
 
 	// tracer will receive trace information of activity in the room.
 	tracer trace.Tracer
+
+	// avatar is how avatar information will be obtained.
+	avatar Avatar
 }
 
-func newRoom() *room {
+func newRoom(avatar Avatar) *room {
 	return &room{
-		forward: make(chan []byte),
+		forward: make(chan *message),
 		join:    make(chan *client),
 		leave:   make(chan *client),
 		clients: make(map[*client]bool),
 		tracer:  trace.Off(),
+		avatar:  avatar,
 	}
 }
 
@@ -84,10 +89,17 @@ func (rm *room) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	authCookie, err := r.Cookie("auth")
+	if err != nil {
+		log.Fatal("Failed to get auth cookie:", err)
+		return
+	}
+
 	client := &client{
-		socket: socket,
-		send:   make(chan []byte, messageBufferSize),
-		room:   rm,
+		socket:   socket,
+		send:     make(chan *message, messageBufferSize),
+		room:     rm,
+		userData: objx.MustFromBase64(authCookie.Value),
 	}
 
 	rm.join <- client
