@@ -18,6 +18,13 @@ import (
 	"github.com/stretchr/objx"
 )
 
+// set the active Avatar implementation
+var avatars Avatar = TryAvatars{
+	UseFileSystemAvatar,
+	UseAuthAvatar,
+	UseGravatar,
+}
+
 func main() {
 
 	var port = flag.Int("port", 8080, "The port of the application.")
@@ -38,7 +45,7 @@ func main() {
 		),
 	)
 
-	r := newRoom(UseGravatar)
+	r := newRoom()
 	r.tracer = trace.New(os.Stdout)
 
 	// Assets
@@ -47,6 +54,16 @@ func main() {
 		http.StripPrefix("/assets",
 			http.FileServer(
 				http.Dir("assets/"),
+			),
+		),
+	)
+
+	http.Handle(
+		"/avatars/",
+		http.StripPrefix(
+			"/avatars/",
+			http.FileServer(
+				http.Dir("./avatars"),
 			),
 		),
 	)
@@ -67,6 +84,8 @@ func main() {
 		w.Header()["Location"] = []string{"/chat"}
 		w.WriteHeader(http.StatusTemporaryRedirect)
 	})
+	http.Handle("/upload", &templateHandler{filename: "upload.html"})
+	http.HandleFunc("/uploader", uploaderHandler)
 	http.Handle("/room", r)
 
 	// get the room going

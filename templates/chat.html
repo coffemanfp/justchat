@@ -76,10 +76,10 @@
                         $("<li>").append(
                             $("<img>").css({
                                 width: 50,
-                                backgroundSize: "cover",
-                                verticalAlign: "middle",
+                                height: 50,
                                 borderRadius: "50%",
-                                marginRight: 25
+                                marginRight: 25,
+                                objectFit: "cover"
                             }).attr({
                                 src: msg.AvatarURL,
                                 title: msg.Name
