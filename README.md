@@ -1,2 +1,2 @@
-# chat
-Chat project of the book Go Programming Blueprints.
+# Just Chat
+A simple chat project writted in Go.
