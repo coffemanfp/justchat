@@ -29,6 +29,41 @@
             overflow-y: auto;
             height: 50vh;
         }
+
+        .message {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        .message.message_self-user {
+            flex-direction: row-reverse;
+        }
+
+        .message .message__avatar {
+            border-radius: 50%;
+            margin-right: 20px;
+            object-fit: cover;
+            height: 50px;
+        }
+
+        .message.message_self-user .message__avatar {
+            margin-right: 0;
+            margin-left: 20px;
+        }
+
+        .message .message__when {
+            color: gray;
+            font-size: .6em;
+            margin-left: auto;
+        }
+
+        .message.message_self-user .message__when {
+            margin-left: 0;
+            margin-right: auto;
+        }
     </style>
 </head>
 
@@ -44,8 +79,8 @@
 
     <form role="form" id="chatbox">
         <div class="form-group">
-            <label for="message">Send a message as {{.UserData.name}}</label> or <a href="/logout">Sign out</a>
-            <textarea id="message" class="form-control"></textarea>
+            <label for="message-area">Send a message as {{.UserData.name}}</label> or <a href="/logout">Sign out</a>
+            <textarea id="message-area" class="form-control"></textarea>
         </div>
         <input type="submit" value="Send" class="btn btn-default">
     </form>
@@ -55,7 +90,7 @@
     <script>
         $(function () {
             var socket = null;
-            var msgBox = $("#chatbox textarea");
+            var msgBox = $("#chatbox #message-area");
             var messages = $("#messages");
             $("#chatbox").submit(function () {
                 if (!msgBox.val()) return false;
@@ -79,29 +114,13 @@
 
                     messages.append(
                         $("<li>").append(
-                            $("<img>").css({
-                                width: 50,
-                                height: 50,
-                                borderRadius: "50%",
-                                marginRight: 25,
-                                objectFit: "cover"
-                            }).attr({
+                            $("<img>").attr({
                                 src: msg.AvatarURL,
                                 title: msg.Name
-                            }),
+                            }).addClass("message__avatar"),
                             $("<span>").text(msg.Message),
-                            $("<span>").text(msg.When).css({
-                                color: "gray",
-                                fontSize: ".6em",
-                                marginLeft: "auto"
-                            }).attr("src", msg.AvatarURL)
-                        ).css({
-                            display: "flex",
-                            flexDirection: "row",
-                            alignItems: "center",
-                            marginTop: 20,
-                            marginBottom: 20
-                        })
+                            $("<span>").text(msg.When).addClass("message__when").attr("src", msg.AvatarURL)
+                        ).addClass("message").addClass((msg.AvatarURL == "{{.UserData.avatar_url}}" ? "message_self-user" : "" ))
                     );
                 }
             }
