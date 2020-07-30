@@ -69,6 +69,11 @@ func main() {
 	)
 
 	// Root
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Header()["Location"] = []string{"/chat"}
+		w.WriteHeader(http.StatusTemporaryRedirect)
+	})
+
 	http.Handle("/chat", MustAuth(&templateHandler{
 		filename: "chat.html",
 	}))
